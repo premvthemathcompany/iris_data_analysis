@@ -3,7 +3,7 @@
 
 # ## This is your Downloaded Blueprint Notebook ##
 
-# In[1]:
+# In[31]:
 
 
 # tags to identify this iteration when submitted
@@ -19,7 +19,7 @@ results_json=[]
 
 # ### IRIS CSV Data
 
-# In[2]:
+# In[32]:
 
 
 irisCsvTableData = """
@@ -30,7 +30,7 @@ from sqlalchemy import create_engine
 APPLICATION_DB_HOST = "trainingserverbatch3.postgres.database.azure.com"
 APPLICATION_DB_NAME = "Training_S3_DB"
 APPLICATION_DB_USER = "Trainingadmin"
-APPLICATION_DB_PASSWORD = "p@ssw0rd"
+APPLICATION_DB_PASSWORD = "p%40ssw0rd"
 
 def getLogger():
     import logging
@@ -47,6 +47,7 @@ logger = getLogger()
 
 def read_database_data(sql_query, filename):
     logger.info(f"Read dataset file: {filename}")
+    connection = None
     try:
         connection_uri = f"postgresql://{APPLICATION_DB_USER}:{APPLICATION_DB_PASSWORD}@{APPLICATION_DB_HOST}/{APPLICATION_DB_NAME}"
         engine = create_engine(connection_uri)
@@ -54,7 +55,7 @@ def read_database_data(sql_query, filename):
         dframe = pd.read_sql_query(sql_query, con=connection)
         return dframe
     except Exception as error_msg:
-        print(f"Error occured while reading data from database using query {query} and error info: {error_msg}")
+        print(f"Error occured while reading data from database using query {sql_query} and error info: {error_msg}")
     finally:
         if connection is not None:
             connection.close()
@@ -100,10 +101,10 @@ def generate_dynamic_table(dframe, name='Sales', grid_options={"tableSize": "sma
 def build_grid_table_json():
     logger.info("Preparing grid table json for Historical Screen")
     form_config = {}
-    filename = "i01654_iris"
+    filename = "i01654_irisdata"
     sql_query = f"select * from {filename}"    
     dframe = read_database_data(sql_query, filename)
-    # selected_filters = {"species": 'Iris-setosa'} # for testing
+    # selected_filters = {"target": 'Iris-setosa'} # for testing
     dframe = get_filter_table(dframe, selected_filters)
     form_config['fields'] = [generate_dynamic_table(dframe)]
     grid_table_json = {}
@@ -122,7 +123,7 @@ dynamic_outputs = json.dumps(grid_table_json)
 
 # ### IRIS CSV Table Filter
 
-# In[3]:
+# In[33]:
 
 
 irisCsvTableDataFilter = """
@@ -134,7 +135,7 @@ from sqlalchemy import create_engine
 APPLICATION_DB_HOST = "trainingserverbatch3.postgres.database.azure.com"
 APPLICATION_DB_NAME = "Training_S3_DB"
 APPLICATION_DB_USER = "Trainingadmin"
-APPLICATION_DB_PASSWORD = "p@ssw0rd"
+APPLICATION_DB_PASSWORD = "p%40ssw0rd"
 
 def getLogger():
     import logging
@@ -151,6 +152,7 @@ logger = getLogger()
 
 def read_database_data(sql_query, filename):
     logger.info(f"Read dataset file: {filename}")
+    connection = None
     try:
         connection_uri = f"postgresql://{APPLICATION_DB_USER}:{APPLICATION_DB_PASSWORD}@{APPLICATION_DB_HOST}/{APPLICATION_DB_NAME}"
         engine = create_engine(connection_uri)
@@ -239,13 +241,13 @@ def get_response_filters(current_filter_params, df, default_values_selected, all
 
 def prepare_filter_json():
     logger.info(f"Preparing json for Filters in Iris Grid Table")
-    # Prepare Filter json for Species in the Iris Grid Table.
-    filename = "i01654_iris"
+    # Prepare Filter json for Target in the Iris Grid Table.
+    filename = "i01654_irisdata"
     sql_query = f"select * from {filename}"    
     dframe = read_database_data(sql_query, filename)
-    dframe = dframe.groupby(['species']).sum().reset_index()
-    filter_dframe = dframe[['species']]
-    default_values_selected = {'species': 'Iris-setosa'}
+    dframe = dframe.groupby(['target']).sum().reset_index()
+    filter_dframe = dframe[['target']]
+    default_values_selected = {'target': 'Iris-setosa'}
     all_filters = []
     multi_select_filters = []
     # current_filter_params = {"selected": default_values_selected}
@@ -261,7 +263,7 @@ dynamic_outputs = prepare_filter_json()
 
 # ### Scatterplot
 
-# In[4]:
+# In[34]:
 
 
 irisScatterplot = """
@@ -274,7 +276,7 @@ from sqlalchemy import create_engine
 APPLICATION_DB_HOST = "trainingserverbatch3.postgres.database.azure.com"
 APPLICATION_DB_NAME = "Training_S3_DB"
 APPLICATION_DB_USER = "Trainingadmin"
-APPLICATION_DB_PASSWORD = "p@ssw0rd"
+APPLICATION_DB_PASSWORD = "p%40ssw0rd"
 
 
 def getLogger():
@@ -292,6 +294,7 @@ logger = getLogger()
 
 def read_database_data(sql_query, filename):
     logger.info(f"Read dataset file: {filename}")
+    connection = None
     try:
         connection_uri = f"postgresql://{APPLICATION_DB_USER}:{APPLICATION_DB_PASSWORD}@{APPLICATION_DB_HOST}/{APPLICATION_DB_NAME}"
         engine = create_engine(connection_uri)
@@ -316,7 +319,7 @@ def getGraph(dframe, filters):
         else:
             dframe = dframe[dframe[item] == filters[item]]
     
-    fig = px.scatter(dframe, x="sepalwidthcm", y="sepallengthcm", color="species",
+    fig = px.scatter(dframe, x="sepalwidthcm", y="sepallengthcm", color="target",
                      size='petallengthcm', hover_data=['petalwidthcm'])
     # fig.show()
     
@@ -324,9 +327,9 @@ def getGraph(dframe, filters):
     return io.to_json(fig)
 
 
-# selected_filters = {"species": 'Iris-versicolor'}
+# selected_filters = {"target": 'Iris-versicolor'}
 
-filename = "i01654_iris"
+filename = "i01654_irisdata"
 sql_query = f"select * from {filename}"    
 dframe = read_database_data(sql_query, filename)
 dynamic_outputs = getGraph(dframe, selected_filters)
@@ -334,15 +337,9 @@ dynamic_outputs = getGraph(dframe, selected_filters)
 """
 
 
-# In[ ]:
-
-
-
-
-
 # ### Color Table
 
-# In[5]:
+# In[35]:
 
 
 color_code_str = '''
@@ -407,7 +404,7 @@ def get_grid_table(df,
 '''
 
 
-# In[6]:
+# In[36]:
 
 
 color_table_code_str = '''
@@ -421,7 +418,7 @@ from sqlalchemy import create_engine
 APPLICATION_DB_HOST = "trainingserverbatch3.postgres.database.azure.com"
 APPLICATION_DB_NAME = "Training_S3_DB"
 APPLICATION_DB_USER = "Trainingadmin"
-APPLICATION_DB_PASSWORD = "p@ssw0rd"
+APPLICATION_DB_PASSWORD = "p%40ssw0rd"
 
 def getLogger():
     import logging
@@ -437,6 +434,7 @@ logger = getLogger()
 
 def read_database_data(sql_query, filename):
     logger.info(f"Read dataset file: {filename}")
+    connection = None
     try:
         connection_uri = f"postgresql://{APPLICATION_DB_USER}:{APPLICATION_DB_PASSWORD}@{APPLICATION_DB_HOST}/{APPLICATION_DB_NAME}"
         engine = create_engine(connection_uri)
@@ -450,14 +448,14 @@ def read_database_data(sql_query, filename):
             connection.close()
 
 
-filename = "i01654_iris"
+filename = "i01654_irisdata"
 sql_query = f"select * from {filename}"    
 main_df = read_database_data(sql_query, filename)
 main_df['sepallengthcm_bgcolor'] = main_df['sepallengthcm'].apply(lambda x: "#0000FF" if x>5 else "#FF0000")
 main_df['sepalwidthcm_bgcolor'] = '#FF00FF'
 main_df['petallengthcm_bgcolor'] = '#00FFFF'
 main_df['petalwidthcm_bgcolor'] = '#800000'
-main_df['species_bgcolor'] = '#00FF00'
+main_df['target_bgcolor'] = '#00FF00'
 
 
 
@@ -472,7 +470,7 @@ irisColorTable = color_code_str + color_table_code_str
 
 # ### Graph
 
-# In[7]:
+# In[37]:
 
 
 irisQuadraticGraph = """
@@ -506,7 +504,7 @@ def plotGraph():
     return io.to_json(fig)
 
 
-selected_filters = {"species": 'Iris-versicolor'}
+# selected_filters = {"target": 'Iris-versicolor'}
 
 dynamic_outputs = plotGraph()
 
@@ -515,7 +513,7 @@ dynamic_outputs = plotGraph()
 
 # ### Multi Trace Plots
 
-# In[8]:
+# In[38]:
 
 
 irisMultiTracePlots = """
@@ -528,7 +526,7 @@ from sqlalchemy import create_engine
 APPLICATION_DB_HOST = "trainingserverbatch3.postgres.database.azure.com"
 APPLICATION_DB_NAME = "Training_S3_DB"
 APPLICATION_DB_USER = "Trainingadmin"
-APPLICATION_DB_PASSWORD = "p@ssw0rd"
+APPLICATION_DB_PASSWORD = "p%40ssw0rd"
 
 
 def getLogger():
@@ -546,6 +544,7 @@ logger = getLogger()
 
 def read_database_data(sql_query, filename):
     logger.info(f"Read dataset file: {filename}")
+    connection = None
     try:
         connection_uri = f"postgresql://{APPLICATION_DB_USER}:{APPLICATION_DB_PASSWORD}@{APPLICATION_DB_HOST}/{APPLICATION_DB_NAME}"
         engine = create_engine(connection_uri)
@@ -605,28 +604,27 @@ def getGraph(dframe, filters):
     return io.to_json(fig)
 
 
-# selected_filters = {"species": 'Iris-versicolor'}
+# selected_filters = {"target": 'Iris-versicolor'}
 
-filename = "i01654_iris"
+filename = "i01654_irisdata"
 sql_query = f"select * from {filename}"    
 dframe = read_database_data(sql_query, filename)
 dynamic_outputs = getGraph(dframe, selected_filters)
 
 """
-#END CUSTOM CODE
 
 
 # ### Result JSON
 
-# In[9]:
+# In[39]:
 
 
 dynamic_result = {
-    'Iris Scatterplot': irisScatterplot,
-    'Iris Dataset': irisCsvTableData,
-    'Iris Color Table': irisColorTable,
-    'Quadratic Graph': irisQuadraticGraph,
-    'Iris Multitrace Plots': irisMultiTracePlots,
+    'Plot': irisScatterplot,
+    'Filter Table': irisCsvTableData,
+    'Color Table': irisColorTable,
+    'Graph': irisQuadraticGraph,
+    'Multitrace': irisMultiTracePlots,
     
 }
 
@@ -637,7 +635,7 @@ dynamic_filter = {
 results_json.append({
     'type': 'dynamic',
     'name': 'Iris Analysis',
-    'component': 'Iris Analysis App',
+    'component': 'Analysis component',
     'dynamic_visual_results': dynamic_result,
     'dynamic_code_filters': dynamic_filter,
 })
@@ -645,7 +643,7 @@ results_json.append({
 
 # ### Please save and checkpoint notebook before submitting params
 
-# In[10]:
+# In[40]:
 
 
 
